@@ -16,11 +16,23 @@ class Ecocash_API {
     private $sandbox_mode;
     
     public function __construct($api_key = null, $sandbox_mode = null) {
-        $this->api_key = $api_key ?: $this->get_api_key();
         $this->sandbox_mode = $sandbox_mode !== null ? $sandbox_mode : (get_option('ecocash_sandbox_mode') === 'yes');
+        $this->api_key = $api_key ?: $this->get_api_key();
+        
+        // Debug logging for API initialization
+        if (get_option('ecocash_debug') === 'yes') {
+            error_log('EcoCash API Constructor Debug:');
+            error_log('- Sandbox Mode: ' . ($this->sandbox_mode ? 'YES' : 'NO'));
+            error_log('- API Key Provided: ' . ($api_key ? 'YES' : 'NO'));
+            error_log('- Final API Key Length: ' . strlen($this->api_key));
+            error_log('- Final API Key (first 10): ' . substr($this->api_key, 0, 10) . '...');
+            error_log('- SDK Will Be Created: ' . ($this->api_key ? 'YES' : 'NO'));
+        }
         
         if ($this->api_key) {
             $this->sdk = new Ecocash_SDK($this->api_key, $this->sandbox_mode);
+        } else {
+            error_log('EcoCash API Error: No API key available for initialization');
         }
     }
     
@@ -28,10 +40,29 @@ class Ecocash_API {
      * Get API key based on current mode
      */
     private function get_api_key() {
+        $sandbox_key = get_option('ecocash_api_key_sandbox');
+        $live_key = get_option('ecocash_api_key_live');
+        
+        // Debug logging for API key retrieval
+        if (get_option('ecocash_debug') === 'yes') {
+            error_log('EcoCash API Key Retrieval Debug:');
+            error_log('- Sandbox Mode: ' . ($this->sandbox_mode ? 'YES' : 'NO'));
+            error_log('- Sandbox Key Available: ' . ($sandbox_key ? 'YES' : 'NO'));
+            error_log('- Live Key Available: ' . ($live_key ? 'YES' : 'NO'));
+            error_log('- Sandbox Key Length: ' . strlen($sandbox_key));
+            error_log('- Live Key Length: ' . strlen($live_key));
+            if ($sandbox_key) {
+                error_log('- Sandbox Key (first 10): ' . substr($sandbox_key, 0, 10) . '...');
+            }
+            if ($live_key) {
+                error_log('- Live Key (first 10): ' . substr($live_key, 0, 10) . '...');
+            }
+        }
+        
         if ($this->sandbox_mode) {
-            return get_option('ecocash_api_key_sandbox');
+            return $sandbox_key;
         } else {
-            return get_option('ecocash_api_key_live');
+            return $live_key;
         }
     }
     
@@ -74,8 +105,18 @@ class Ecocash_API {
             return array('success' => false, 'message' => 'Invalid mobile number format');
         }
         
-        // Generate unique reference
-        $reference = 'WC-' . $order->get_id() . '-' . time();
+        // Generate unique UUID reference
+        $reference = Ecocash_SDK::generate_uuid();
+        
+        // Debug logging
+        if (get_option('ecocash_debug') === 'yes') {
+            error_log('EcoCash Payment Processing:');
+            error_log('- Order ID: ' . $order->get_id());
+            error_log('- Generated Reference: ' . $reference);
+            error_log('- Mobile Number: ' . substr($formatted_mobile, 0, 6) . 'XXXXX');
+            error_log('- Amount: ' . $order->get_total());
+            error_log('- Currency: ' . $order->get_currency());
+        }
         
         // Get order details
         $amount = $order->get_total();

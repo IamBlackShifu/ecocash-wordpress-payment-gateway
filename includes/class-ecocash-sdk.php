@@ -188,6 +188,18 @@ class Ecocash_SDK {
             'X-API-KEY: ' . $this->api_key
         );
         
+        // Debug logging for development
+        if ($this->sandbox_mode || get_option('ecocash_debug') === 'yes') {
+            error_log('EcoCash API Request Debug:');
+            error_log('- Method: ' . $method);
+            error_log('- URL: ' . $url);
+            error_log('- API Key (first 10 chars): ' . substr($this->api_key, 0, 10) . '...');
+            error_log('- API Key Length: ' . strlen($this->api_key));
+            error_log('- API Key Empty: ' . (empty($this->api_key) ? 'YES' : 'NO'));
+            error_log('- Sandbox Mode: ' . ($this->sandbox_mode ? 'YES' : 'NO'));
+            error_log('- Request Data: ' . json_encode($data));
+        }
+        
         $args = array(
             'method' => $method,
             'headers' => $headers,
@@ -199,11 +211,21 @@ class Ecocash_SDK {
         $response = wp_remote_request($url, $args);
         
         if (is_wp_error($response)) {
-            return $this->error_result('Network error: ' . $response->get_error_message(), 500);
+            $error_message = 'Network error: ' . $response->get_error_message();
+            error_log('EcoCash API Network Error: ' . $error_message);
+            return $this->error_result($error_message, 500);
         }
         
         $status_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
+        
+        // Enhanced debug logging
+        if ($this->sandbox_mode || get_option('ecocash_debug') === 'yes') {
+            error_log('EcoCash API Response Debug:');
+            error_log('- Status Code: ' . $status_code);
+            error_log('- Response Body: ' . $body);
+            error_log('- Response Headers: ' . json_encode(wp_remote_retrieve_headers($response)));
+        }
         
         // Log the request for debugging (only in sandbox mode or if debug is enabled)
         if ($this->sandbox_mode || get_option('ecocash_debug') === 'yes') {
@@ -212,9 +234,21 @@ class Ecocash_SDK {
         
         if ($status_code === 200) {
             $decoded_body = json_decode($body, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log('EcoCash API JSON Decode Error: ' . json_last_error_msg());
+                return $this->error_result('Invalid JSON response from API', 500, $body);
+            }
             return $this->success_result($decoded_body);
         } else {
             $error_message = $this->get_error_message($status_code);
+            
+            // Try to decode error response for more details
+            $decoded_error = json_decode($body, true);
+            if ($decoded_error && isset($decoded_error['message'])) {
+                $error_message .= ' - ' . $decoded_error['message'];
+            }
+            
+            error_log('EcoCash API Error Response: Status ' . $status_code . ' - ' . $error_message);
             return $this->error_result($error_message, $status_code, $body);
         }
     }
@@ -325,13 +359,36 @@ class Ecocash_SDK {
     }
     
     /**
-     * Generate unique transaction reference
+     * Generate unique transaction reference in UUID format
      * 
      * @param string $prefix Optional prefix for the reference
-     * @return string Unique reference
+     * @return string Unique UUID-formatted reference
      */
     public static function generate_reference($prefix = 'TXN') {
-        return $prefix . '-' . time() . '-' . wp_rand(1000, 9999);
+        // Generate a UUID v4 format
+        return sprintf('%s-%04x%04x-%04x-%04x-%04x%04x%04x',
+            strtolower($prefix),
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
+    }
+    
+    /**
+     * Generate proper UUID v4
+     * 
+     * @return string UUID v4 formatted string
+     */
+    public static function generate_uuid() {
+        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
     }
     
     /**

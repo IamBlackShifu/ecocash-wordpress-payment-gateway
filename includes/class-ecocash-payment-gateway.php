@@ -200,6 +200,25 @@ class Ecocash_Payment_Gateway extends WC_Payment_Gateway {
         
         // Initialize API
         $api_key = $this->sandbox_mode ? $this->api_key_sandbox : $this->api_key_live;
+        
+        // Debug logging for development
+        if ($this->debug || get_option('ecocash_debug') === 'yes') {
+            error_log('EcoCash Debug - Payment Process:');
+            error_log('- Sandbox Mode: ' . ($this->sandbox_mode ? 'YES' : 'NO'));
+            error_log('- API Key (first 10 chars): ' . substr($api_key, 0, 10) . '...');
+            error_log('- API Key Empty: ' . (empty($api_key) ? 'YES' : 'NO'));
+            error_log('- Order ID: ' . $order->get_id());
+            error_log('- Order Total: ' . $order->get_total());
+            error_log('- Currency: ' . $order->get_currency());
+            error_log('- Mobile Number: ' . substr($mobile_number, 0, 6) . 'XXXXX');
+        }
+        
+        if (empty($api_key)) {
+            error_log('EcoCash Error: No API key configured for ' . ($this->sandbox_mode ? 'sandbox' : 'live') . ' mode');
+            wc_add_notice(__('Payment configuration error. Please contact store administrator.', ECOCASH_PLUGIN_TEXT_DOMAIN), 'error');
+            return array('result' => 'fail');
+        }
+        
         $ecocash_api = new Ecocash_API($api_key, $this->sandbox_mode);
         
         // Process payment
