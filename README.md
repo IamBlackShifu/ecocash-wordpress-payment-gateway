@@ -51,7 +51,7 @@ A comprehensive WordPress plugin for integrating Ecocash payment services (Zimba
 
 ```bash
 cd /wp-content/plugins/
-git clone https://github.com/IamBlackShifu/ecocashWordPress.git ecocash-payment-gateway
+git clone https://github.com/IamBlackShifu/ecocash-wordpress-payment-gateway.git
 ```
 
 ## Quick Setup Guide 🚀
@@ -281,8 +281,6 @@ If this plugin helps your business, consider:
 - 📢 Sharing with other developers
 
 ---
-
-**Made with ❤️ for the Zimbabwean developer community**
 
 For questions, support, or feature requests, please open an issue on GitHub or contact the maintainers.
 
