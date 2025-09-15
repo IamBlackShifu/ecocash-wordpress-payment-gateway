@@ -27,9 +27,11 @@ class Ecocash_SDK {
      */
     const BASE_URL = 'https://developers.ecocash.co.zw/api/ecocash_pay';
     
+    
     // Payment endpoints
     const PAYMENT_LIVE_URL = self::BASE_URL . '/api/v2/payment/instant/c2b/live';
-    const PAYMENT_SANDBOX_URL = self::BASE_URL . '/api/v2/payment/instant/c2b/sandbox';
+    const PAYMENT_SANDBOX_URL = 'https://developers.ecocash.co.zw/api/ecocash_pay/api/v2/payment/instant/c2b/sandbox';
+    // self::BASE_URL . '/api/v2/payment/instant/c2b/sandbox';
     
     // Lookup endpoints
     const LOOKUP_LIVE_URL = self::BASE_URL . '/api/v1/transaction/c2b/status/live';

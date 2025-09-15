@@ -3,7 +3,7 @@
  * Plugin Name: Ecocash Payment Gateway for WordPress
  * Plugin URI: https://github.com/IamBlackShifu/ecocash-wordpress-payment-gateway.git
  * Description: A comprehensive WordPress plugin for integrating Ecocash payment services (Zimbabwe). Supports WooCommerce integration with instant payments, transaction lookup, and refund processing.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Infinity Lines of Code  Pvt Ltd
  * Author URI: https://infinitylinesofcode.com
  * License: MIT
